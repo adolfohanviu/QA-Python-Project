@@ -6,15 +6,14 @@ Comprehensive end-to-end test automation framework built with Python, Pytest, an
 
 - **Playwright** - Modern cross-browser automation with async/await support
 - **Pytest** - Flexible and scalable test framework with powerful fixtures
-- **BDD with pytest-bdd** - Behavior-driven development with Gherkin syntax
+- **Async Tests** - Native async test support via pytest-asyncio
 - **API Testing** - REST API testing with requests library and fixtures
-- **Allure Reporting** - Beautiful HTML reports with step details and screenshots
-- **Headless Mode** - Environment-controlled headless browser execution
+- **Allure Reporting** - HTML reports with steps, logs, and screenshots
+- **Headless Mode** - Environment- or CLI-controlled browser execution
 - **GitHub Actions CI/CD** - Automated test execution on push/PR with report publishing
 - **Page Object Model** - Maintainable UI test structure
 - **Test Data Fixtures** - JSON-based test data management
 - **Multi-browser Support** - Chromium, Firefox, WebKit
-- **Automatic Retries** - Built-in test retry mechanism for flaky tests
 - **Logging** - Comprehensive logging with CLI and file output
 
 ## Project Structure
@@ -114,6 +113,11 @@ pytest tests/api/test_user_api.py -v
 ### Run with headless mode enabled
 ```bash
 pytest -v --headless=true
+```
+
+### Run in headed mode
+```bash
+pytest -v --headless=false
 ```
 
 ## One-Command Execution (Recommended)
@@ -324,22 +328,10 @@ await page.goto(url, timeout=60000)  # 60 seconds
 
 ### Allure report not generating
 ```bash
-pip install pytest-allure-adaptor
+pip install allure-pytest
 pytest --alluredir=allure-results
 ```
 
-## Contributing
-
-1. Create feature branch: `git checkout -b feature/name`
-2. Make changes and test locally
-3. Push and create Pull Request
-4. Wait for CI/CD to pass
-5. Merge to main
-
-## License
-
-MIT
-
 ## Author
 
-Adolfo Han - SDET/QA Engineer
+Adolfo Han - Senior SDET/QA Engineer

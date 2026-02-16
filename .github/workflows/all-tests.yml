@@ -18,11 +18,11 @@ jobs:
       with:
         python-version: '3.11'
     
-    - name: Install Playwright browsers
-      run: playwright install
-    
     - name: Install dependencies
       run: pip install -r requirements.txt
+    
+    - name: Install Playwright browsers
+      run: playwright install
     
     - name: Run all tests
       run: pytest --headless=true -v

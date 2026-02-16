@@ -4,6 +4,9 @@ Write-Host "Setting environment variables..." -ForegroundColor Cyan
 $env:HEADLESS = "true"
 $env:API_BASE_URL = "https://jsonplaceholder.typicode.com"
 
+Write-Host "Installing dependencies..." -ForegroundColor Cyan
+pip install -r requirements.txt
+
 Write-Host "Installing Playwright browsers..." -ForegroundColor Cyan
 playwright install
 

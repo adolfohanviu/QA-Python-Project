@@ -1,6 +1,5 @@
 import os
 import logging
-from functools import lru_cache
 from typing import Dict, Any
 from dotenv import load_dotenv
 import json
@@ -25,10 +24,13 @@ class Config:
     @staticmethod
     def load_fixture(fixture_name: str) -> Dict[str, Any]:
         """Load test data fixture from JSON"""
-        fixture_path = os.path.join(
-            os.path.dirname(__file__),
-            "fixtures",
-            "api_users.json"
+        fixture_path = os.path.normpath(
+            os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "fixtures",
+                "api_users.json",
+            )
         )
         
         with open(fixture_path, "r") as f:

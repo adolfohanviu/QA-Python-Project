@@ -45,16 +45,17 @@ async def context(browser) -> Generator[BrowserContext, None, None]:
 
 
 @pytest.fixture
-async def page(context) -> Generator[Page, None, None]:
+async def page(context, request) -> Generator[Page, None, None]:
     """Create page instance"""
     page = await context.new_page()
+    test_name = request.node.nodeid.replace("::", "_").replace("/", "_").replace("\\", "_")
     yield page
     
     # Take screenshot on failure
-    if not getattr(page, "_test_passed", True):
+    if not getattr(request.node, "_test_passed", True):
         screenshot_dir = Path("tests/screenshots")
         screenshot_dir.mkdir(parents=True, exist_ok=True)
-        screenshot_path = screenshot_dir / f"failure_{page._test_name}.png"
+        screenshot_path = screenshot_dir / f"failure_{test_name}.png"
         await page.screenshot(path=str(screenshot_path))
         logger.info(f"Screenshot captured: {screenshot_path}")
     
@@ -77,3 +78,20 @@ def pytest_runtest_makereport(item, call):
     outcome = yield
     if outcome.excinfo is not None:
         item._test_passed = False
+
+
+def pytest_addoption(parser):
+    """Register custom CLI options"""
+    parser.addoption(
+        "--headless",
+        action="store",
+        default=None,
+        help="Run browser in headless mode: true/false",
+    )
+
+
+def pytest_configure(config):
+    """Apply CLI overrides to environment"""
+    headless_option = config.getoption("--headless")
+    if headless_option is not None:
+        os.environ["HEADLESS"] = str(headless_option).lower()

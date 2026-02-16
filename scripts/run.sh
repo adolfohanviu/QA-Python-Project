@@ -6,6 +6,9 @@ echo "Setting environment variables..."
 export HEADLESS=true
 export API_BASE_URL="https://jsonplaceholder.typicode.com"
 
+echo "Installing dependencies..."
+pip install -r requirements.txt
+
 echo "Installing Playwright browsers..."
 playwright install
 
