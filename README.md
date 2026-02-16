@@ -1,0 +1,345 @@
+# Playwright Automation Framework (Python)
+
+Comprehensive end-to-end test automation framework built with Python, Pytest, and Playwright. Designed for UI and API testing with Allure reporting, headless execution, and CI/CD integration.
+
+## Features
+
+- **Playwright** - Modern cross-browser automation with async/await support
+- **Pytest** - Flexible and scalable test framework with powerful fixtures
+- **BDD with pytest-bdd** - Behavior-driven development with Gherkin syntax
+- **API Testing** - REST API testing with requests library and fixtures
+- **Allure Reporting** - Beautiful HTML reports with step details and screenshots
+- **Headless Mode** - Environment-controlled headless browser execution
+- **GitHub Actions CI/CD** - Automated test execution on push/PR with report publishing
+- **Page Object Model** - Maintainable UI test structure
+- **Test Data Fixtures** - JSON-based test data management
+- **Multi-browser Support** - Chromium, Firefox, WebKit
+- **Automatic Retries** - Built-in test retry mechanism for flaky tests
+- **Logging** - Comprehensive logging with CLI and file output
+
+## Project Structure
+
+```
+tests/
+├── api/                    # API tests and client
+│   ├── api_client.py      # REST API wrapper
+│   └── test_user_api.py   # API test cases
+├── pageobjects/           # Page Object Model classes
+│   ├── base_page.py       # Base page with common functions
+│   └── login_page.py      # Login page object
+├── fixtures/              # Test data fixtures
+│   └── api_users.json     # API test data
+├── utils/                 # Utilities and helpers
+│   └── config.py          # Configuration management
+├── features/              # Gherkin feature files (future)
+├── screenshots/           # Failure screenshots
+├── conftest.py            # Pytest fixtures and hooks
+└── test_*.py              # Test files
+
+.github/workflows/         # GitHub Actions CI/CD
+├── all-tests.yml         # All tests workflow
+├── smoke-tests.yml       # Smoke tests (daily schedule)
+└── regression-tests.yml  # Regression tests (daily schedule)
+
+scripts/                   # Helper scripts
+├── run.sh               # Bash wrapper (macOS/Linux)
+└── run.ps1              # PowerShell wrapper (Windows)
+
+config/                   # Configuration files
+requirements.txt          # Python dependencies
+pytest.ini               # Pytest configuration
+README.md                # This file
+```
+
+## Prerequisites
+
+- **Python 3.11+**
+- **pip** (Python package manager)
+- **Git**
+
+## Setup
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/adolfohanviu/QA-Python-Project.git
+cd QA-Python-Project
+```
+
+### 2. Create virtual environment
+```bash
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# macOS/Linux
+source venv/bin/activate
+```
+
+### 3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Install Playwright browsers
+```bash
+playwright install
+```
+
+## Running Tests
+
+### Run all tests
+```bash
+pytest -v
+```
+
+### Run by marker
+```bash
+pytest -m smoke -v        # Smoke tests only
+pytest -m regression -v   # Regression tests only
+pytest -m api -v         # API tests only
+pytest -m ui -v          # UI tests only
+```
+
+### Run with environment variables
+```bash
+HEADLESS=true BASE_URL=https://www.saucedemo.com pytest -v
+```
+
+### Run single test file
+```bash
+pytest tests/api/test_user_api.py -v
+```
+
+### Run with headless mode enabled
+```bash
+pytest -v --headless=true
+```
+
+## One-Command Execution (Recommended)
+
+**Windows (PowerShell):**
+```powershell
+.\scripts\run.ps1
+```
+
+**macOS/Linux (Bash):**
+```bash
+bash scripts/run.sh
+```
+
+This automatically:
+- Sets HEADLESS=true
+- Installs Playwright browsers
+- Runs all tests
+- Generates Allure report
+- Serves report on http://localhost:4040
+
+## Configuration
+
+### Environment Variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `HEADLESS` | true | Run browser in headless mode |
+| `BASE_URL` | https://www.saucedemo.com | UI test target URL |
+| `API_BASE_URL` | https://jsonplaceholder.typicode.com | API base endpoint |
+| `BROWSER_TYPE` | chromium | Browser engine (chromium/firefox/webkit) |
+| `TIMEOUT` | 30000 | Action timeout in milliseconds |
+| `LOG_LEVEL` | INFO | Logging level |
+
+### Configuration File
+
+Edit `tests/utils/config.py` to customize framework behavior:
+
+```python
+config = Config()
+# base_url: UI test target
+# api_base_url: API endpoint
+# headless: headless mode flag
+# timeout: default action timeout
+```
+
+## Test Data & Fixtures
+
+### API Fixtures
+
+Test data is managed in `tests/fixtures/api_users.json`:
+
+```json
+{
+  "userBasic": {
+    "name": "Automation User",
+    "email": "automation@test.com"
+  },
+  "userUpdate": {
+    "email": "updated@test.com"
+  }
+}
+```
+
+### Loading Fixtures in Tests
+
+```python
+from tests.utils.config import config
+
+fixture_data = config.load_fixture("userBasic")
+response = self.client.post("/users", fixture_data)
+```
+
+## Allure Reports
+
+### Generate and view report locally
+```bash
+pytest -v
+allure serve allure-results
+```
+
+Opens report on http://localhost:4040
+
+### Report includes:
+- Test execution timeline
+- Pass/fail breakdown
+- Failure screenshots
+- Step-by-step logs
+- Request/response details
+
+## API Testing
+
+### Using the APIClient
+
+```python
+from tests.api.api_client import APIClient
+
+client = APIClient()
+
+# GET request
+response = client.get("/users")
+
+# POST with data
+response = client.post("/users", {"name": "John", "email": "john@test.com"})
+
+# GET JSON response
+data = response.get_json()
+
+# Check status
+assert client.get_status_code() == 200
+```
+
+## Page Object Model (POM)
+
+### Creating page objects
+
+```python
+from tests.pageobjects.base_page import BasePage
+
+class LoginPage(BasePage):
+    USERNAME_INPUT = "[data-test='username']"
+    
+    async def login(self, username: str, password: str):
+        await self.fill_text(self.USERNAME_INPUT, username)
+        await self.click("[data-test='login-button']")
+```
+
+### Using page objects in tests
+
+```python
+async def test_login(page):
+    login = LoginPage(page)
+    await login.goto(config.base_url)
+    await login.login("user", "password")
+```
+
+## Parallel Execution
+
+Run tests in parallel with pytest-xdist:
+
+```bash
+pytest -n auto -v    # Auto-detect number of cores
+pytest -n 4 -v       # Use 4 workers
+```
+
+## CI/CD Integration
+
+### GitHub Actions Workflows
+
+Three automated workflows are configured:
+
+**1. All Tests** - Runs on push/PR to main
+```bash
+pytest -v
+```
+
+**2. Smoke Tests** - Scheduled daily at 6 AM
+```bash
+pytest -m smoke -v
+```
+
+**3. Regression Tests** - Scheduled daily at 10 PM
+```bash
+pytest -m regression -v
+```
+
+All workflows:
+- Install Python 3.11
+- Install Playwright browsers
+- Run tests with `HEADLESS=true`
+- Generate and publish Allure reports to GitHub Pages
+
+## Logging
+
+Logs are displayed in console and can be configured:
+
+```python
+# In pytest.ini
+log_cli_level = INFO
+log_cli_format = %(asctime)s [%(levelname)s] %(message)s
+```
+
+### Log levels: DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+## Best Practices
+
+- ✅ Use Page Object Model for UI tests
+- ✅ Load test data from fixtures, not inline
+- ✅ Mark tests with `@pytest.mark.smoke`, `@pytest.mark.regression`
+- ✅ Use async/await for cleaner test code
+- ✅ Capture failures with screenshots
+- ✅ Use meaningful assertion messages
+- ✅ Keep tests independent and idempotent
+- ✅ Use fixtures for setup/teardown
+
+## Troubleshooting
+
+### Playwright browsers not installed
+```bash
+playwright install
+```
+
+### Tests timeout
+Increase timeout in config or per test:
+```python
+await page.goto(url, timeout=60000)  # 60 seconds
+```
+
+### Allure report not generating
+```bash
+pip install pytest-allure-adaptor
+pytest --alluredir=allure-results
+```
+
+## Contributing
+
+1. Create feature branch: `git checkout -b feature/name`
+2. Make changes and test locally
+3. Push and create Pull Request
+4. Wait for CI/CD to pass
+5. Merge to main
+
+## License
+
+MIT
+
+## Author
+
+Adolfo Han - SDET/QA Engineer

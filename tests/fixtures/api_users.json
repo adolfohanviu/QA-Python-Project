@@ -1,0 +1,9 @@
+{
+  "userBasic": {
+    "name": "Automation User",
+    "email": "automation@test.com"
+  },
+  "userUpdate": {
+    "email": "updated@test.com"
+  }
+}

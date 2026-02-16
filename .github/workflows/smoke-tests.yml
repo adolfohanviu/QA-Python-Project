@@ -1,0 +1,45 @@
+name: Smoke Tests
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6 AM
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Install Playwright browsers
+      run: playwright install
+    
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+    
+    - name: Run smoke tests
+      run: pytest -m smoke -v --headless=true
+      env:
+        BASE_URL: https://www.saucedemo.com
+        API_BASE_URL: https://jsonplaceholder.typicode.com
+        HEADLESS: true
+    
+    - name: Generate Allure Report
+      if: always()
+      uses: simple-elf/allure-report-action@master
+      with:
+        allure_results: allure-results
+        allure_history: allure-history
+    
+    - name: Deploy report
+      if: always()
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: allure-report
