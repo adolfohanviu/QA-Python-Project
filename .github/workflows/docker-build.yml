@@ -1,0 +1,72 @@
+name: Docker Build & Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  docker-build-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Build Docker image
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: false
+        load: true
+        tags: qa-python-tests:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Run tests in Docker
+      run: |
+        docker run --rm \
+          -e HEADLESS=true \
+          -e BASE_URL=https://www.saucedemo.com \
+          -e API_BASE_URL=https://jsonplaceholder.typicode.com \
+          -v ${{ github.workspace }}/allure-results:/app/allure-results \
+          qa-python-tests:${{ github.sha }} \
+          pytest -v --alluredir=allure-results
+    
+    - name: Generate Allure Report
+      if: always()
+      uses: simple-elf/allure-report-action@master
+      with:
+        allure_results: allure-results
+        allure_history: allure-history
+    
+    - name: Deploy report to GitHub Pages
+      if: always()
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: allure-report
+
+  # Optional: Push to Docker registry
+  docker-push:
+    needs: docker-build-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    
+    - name: Build and push (optional)
+      uses: docker/build-push-action@v4
+      with:
+        context: .
+        push: false  # Change to true if using Docker Hub
+        tags: qa-python-tests:latest,qa-python-tests:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max

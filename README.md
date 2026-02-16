@@ -14,6 +14,8 @@ Comprehensive end-to-end test automation framework built with Python, Pytest, an
 - **Page Object Model** - Maintainable UI test structure
 - **Test Data Fixtures** - JSON-based test data management
 - **Multi-browser Support** - Chromium, Firefox, WebKit
+- **Docker** - Containerized testing with multi-stage builds and compose
+- **Kubernetes** - Production-grade cluster deployment with RBAC and ConfigMaps
 - **Logging** - Comprehensive logging with CLI and file output
 
 ## Project Structure
@@ -38,16 +40,29 @@ tests/
 .github/workflows/         # GitHub Actions CI/CD
 ├── all-tests.yml         # All tests workflow
 ├── smoke-tests.yml       # Smoke tests (daily schedule)
-└── regression-tests.yml  # Regression tests (daily schedule)
+├── regression-tests.yml  # Regression tests (daily schedule)
+└── docker-build.yml      # Docker build and push workflow
 
 scripts/                   # Helper scripts
 ├── run.sh               # Bash wrapper (macOS/Linux)
 └── run.ps1              # PowerShell wrapper (Windows)
 
-config/                   # Configuration files
-requirements.txt          # Python dependencies
-pytest.ini               # Pytest configuration
-README.md                # This file
+k8s/                      # Kubernetes manifests
+├── namespace.yaml        # QA automation namespace
+├── configmap.yaml        # Configuration management
+├── rbac.yaml             # Role-based access control
+├── job.yaml              # Test execution job
+└── deployment.yaml       # Allure report UI deployment
+
+Docker/                    # Container configuration
+├── Dockerfile            # Multi-stage build
+├── docker-compose.yml    # Local development compose
+└── .dockerignore         # Build context exclusions
+
+config/                    # Configuration files
+requirements.txt           # Python dependencies
+pytest.ini                # Pytest configuration
+README.md                 # This file
 ```
 
 ## Prerequisites
@@ -189,6 +204,98 @@ from tests.utils.config import config
 
 fixture_data = config.load_fixture("userBasic")
 response = self.client.post("/users", fixture_data)
+```
+
+## Docker & Containerization
+
+### Build Docker Image
+
+```bash
+# Build the image
+docker build -t qa-python-tests:latest .
+
+# Run tests in container
+docker run --rm qa-python-tests:latest pytest -v
+```
+
+### Docker Compose (Recommended)
+
+```bash
+# Run all services (tests + Allure reporting UI)
+docker-compose up
+
+# Run in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f test-runner
+
+# Cleanup
+docker-compose down -v
+```
+
+This starts:
+- **test-runner**: Executes all tests
+- **allure-ui**: Report viewer on http://localhost:4040
+
+### Environment Variables in Docker
+
+```bash
+docker run --rm \
+  -e HEADLESS=true \
+  -e BASE_URL=https://www.saucedemo.com \
+  -e API_BASE_URL=https://jsonplaceholder.typicode.com \
+  qa-python-tests:latest pytest -v
+```
+
+## Kubernetes Deployment
+
+Deploy tests and monitoring infrastructure to Kubernetes cluster:
+
+### Prerequisites
+- Kubernetes cluster (v1.20+)
+- kubectl configured
+- Docker image pushed to registry
+
+### Deploy Resources
+
+```bash
+# Create namespace
+kubectl apply -f k8s/namespace.yaml
+
+# Create configuration
+kubectl apply -f k8s/configmap.yaml
+
+# Setup RBAC
+kubectl apply -f k8s/rbac.yaml
+
+# Deploy Allure report UI
+kubectl apply -f k8s/deployment.yaml
+
+# Run test job
+kubectl apply -f k8s/job.yaml
+```
+
+### Monitor Test Execution
+
+```bash
+# List running jobs
+kubectl get jobs -n qa-automation
+
+# View test pod logs
+kubectl logs -n qa-automation -l app=qa-test-runner
+
+# Get test results
+kubectl exec -n qa-automation <pod-name> -- cat /app/allure-results/*
+```
+
+### Access Allure UI
+
+```bash
+# Port forward to local machine
+kubectl port-forward -n qa-automation svc/allure-report-service 4040:80
+
+# Open browser: http://localhost:4040
 ```
 
 ## Allure Reports

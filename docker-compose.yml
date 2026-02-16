@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qa-python-tests
+    environment:
+      HEADLESS: "true"
+      BASE_URL: https://www.saucedemo.com
+      API_BASE_URL: https://jsonplaceholder.typicode.com
+      PYTHONUNBUFFERED: 1
+      LOG_LEVEL: INFO
+    volumes:
+      - ./tests:/app/tests
+      - ./allure-results:/app/allure-results
+      - ./tests/screenshots:/app/tests/screenshots
+    working_dir: /app
+    # Override default CMD for interactive testing
+    command: pytest -v --alluredir=allure-results
+    networks:
+      - test-network
+    # Uncomment for CI/CD environments
+    # restart: no
+    # exit-code-from: test-runner
+
+  # Optional: Test reporting service
+  allure-ui:
+    image: frankescobar/allure-docker-service:2.21.0
+    container_name: allure-report
+    ports:
+      - "4040:4040"
+      - "4041:4041"
+    volumes:
+      - ./allure-results:/app/allure-results
+      - ./allure-reports:/app/default-reports
+    environment:
+      CHECK_RESULTS_EVERY_SECONDS: 5
+      KEEP_HISTORY: 1
+    networks:
+      - test-network
+
+networks:
+  test-network:
+    driver: bridge

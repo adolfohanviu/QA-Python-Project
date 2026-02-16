@@ -18,13 +18,23 @@ ENV/
 
 # Test reports
 allure-results/
+allure-reports/
 .allure/
 *.log
 tests/screenshots/
 
+# Docker
+docker-compose.override.yml
+.docker/
+
+# Kubernetes
+k8s/*.override.yaml
+.kube/
+
 # Environment
 .env
 .env.local
+.env.*.local
 
 # OS
 .DS_Store

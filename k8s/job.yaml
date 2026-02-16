@@ -1,0 +1,68 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: qa-test-runner-{{ .Release.Name }}-{{ now | date "20060102150405" }}
+  namespace: qa-automation
+  labels:
+    app: qa-test-runner
+    version: v1
+spec:
+  backoffLimit: 3
+  completions: 1
+  parallelism: 1
+  ttlSecondsAfterFinished: 3600
+  
+  template:
+    metadata:
+      labels:
+        app: qa-test-runner
+    spec:
+      serviceAccountName: qa-tests
+      restartPolicy: Never
+      
+      containers:
+      - name: test-runner
+        image: qa-python-tests:latest
+        imagePullPolicy: Always
+        
+        env:
+        - name: HEADLESS
+          valueFrom:
+            configMapKeyRef:
+              name: qa-test-config
+              key: HEADLESS
+        - name: BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: qa-test-config
+              key: BASE_URL
+        - name: API_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: qa-test-config
+              key: API_BASE_URL
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: qa-test-config
+              key: LOG_LEVEL
+        
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        
+        volumeMounts:
+        - name: results
+          mountPath: /app/allure-results
+        - name: screenshots
+          mountPath: /app/tests/screenshots
+      
+      volumes:
+      - name: results
+        emptyDir: {}
+      - name: screenshots
+        emptyDir: {}

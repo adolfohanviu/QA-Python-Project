@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: allure-report
+  namespace: qa-automation
+  labels:
+    app: allure-report
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: allure-report
+  
+  template:
+    metadata:
+      labels:
+        app: allure-report
+    spec:
+      containers:
+      - name: allure-ui
+        image: frankescobar/allure-docker-service:2.21.0
+        
+        ports:
+        - containerPort: 4040
+          name: web
+          protocol: TCP
+        
+        env:
+        - name: CHECK_RESULTS_EVERY_SECONDS
+          value: "5"
+        - name: KEEP_HISTORY
+          value: "1"
+        
+        volumeMounts:
+        - name: allure-results
+          mountPath: /app/allure-results
+        - name: allure-reports
+          mountPath: /app/default-reports
+        
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 4040
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 4040
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+      
+      volumes:
+      - name: allure-results
+        emptyDir: {}
+      - name: allure-reports
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: allure-report-service
+  namespace: qa-automation
+  labels:
+    app: allure-report
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 4040
+    protocol: TCP
+    name: http
+  selector:
+    app: allure-report
