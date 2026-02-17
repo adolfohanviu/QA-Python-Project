@@ -1,6 +1,6 @@
 # Multi-stage build for test automation framework
 # Use the official Playwright image to include all browser deps
-FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy as base
+FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy AS base
 
 # Set working directory
 WORKDIR /app
