@@ -28,6 +28,7 @@ jobs:
     
     - name: Run tests in Docker
       run: |
+        mkdir -p allure-results
         docker run --rm \
           -e HEADLESS=true \
           -e BASE_URL=https://www.saucedemo.com \
