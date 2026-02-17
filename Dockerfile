@@ -22,7 +22,8 @@ COPY . .
 # Create output directories with correct ownership
 USER root
 RUN mkdir -p allure-results tests/screenshots && \
-    chown -R pwuser:pwuser /app
+    chown -R pwuser:pwuser /app && \
+    chmod -R 777 /app/allure-results
 USER pwuser
 
 # Health check
