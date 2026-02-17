@@ -2,6 +2,8 @@
 
 Comprehensive end-to-end test automation framework built with Python, Pytest, and Playwright. Designed for UI and API testing with Allure reporting, headless execution, and CI/CD integration.
 
+> **Status**: ✅ CI/CD pipelines configured and passing - All Tests, Smoke Tests, Regression Tests
+
 ## Features
 
 - **Playwright** - Modern cross-browser automation with async/await support
