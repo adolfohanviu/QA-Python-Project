@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from typing import Generator
 import pytest
+import pytest_asyncio
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ def browser_type():
     return os.getenv("BROWSER_TYPE", "chromium")
 
 
-@pytest.fixture(scope="session")
+@pytest_asyncio.fixture
 async def browser(headless, browser_type) -> Generator[Browser, None, None]:
     """Create browser instance"""
     async with async_playwright() as p:
@@ -36,7 +37,7 @@ async def browser(headless, browser_type) -> Generator[Browser, None, None]:
         await browser.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def context(browser) -> Generator[BrowserContext, None, None]:
     """Create browser context"""
     context = await browser.new_context()
@@ -44,7 +45,7 @@ async def context(browser) -> Generator[BrowserContext, None, None]:
     await context.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def page(context, request) -> Generator[Page, None, None]:
     """Create page instance"""
     page = await context.new_page()
@@ -95,3 +96,5 @@ def pytest_configure(config):
     headless_option = config.getoption("--headless")
     if headless_option is not None:
         os.environ["HEADLESS"] = str(headless_option).lower()
+
+
