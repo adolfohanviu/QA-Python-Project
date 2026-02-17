@@ -32,14 +32,19 @@ jobs:
     
     - name: Generate Allure Report
       if: always()
-      uses: simple-elf/allure-report-action@master
-      with:
-        allure_results: allure-results
-        allure_history: allure-history
+      continue-on-error: true
+      run: |
+        if [ -d allure-results ]; then
+          echo "Allure results directory exists"
+          ls -la allure-results
+        else
+          echo "No allure results found"
+        fi
     
-    - name: Deploy report
+    - name: Upload Allure Results
       if: always()
-      uses: peaceiris/actions-gh-pages@v3
+      uses: actions/upload-artifact@v3
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: allure-report
+        name: allure-results-smoke
+        path: allure-results
+        retention-days: 30
