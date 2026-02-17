@@ -5,11 +5,11 @@ services:
       dockerfile: Dockerfile
     container_name: qa-python-tests
     environment:
-      HEADLESS: "true"
-      BASE_URL: https://www.saucedemo.com
-      API_BASE_URL: https://jsonplaceholder.typicode.com
-      PYTHONUNBUFFERED: 1
-      LOG_LEVEL: INFO
+      HEADLESS: "${HEADLESS:-true}"
+      BASE_URL: "${BASE_URL:-https://www.saucedemo.com}"
+      API_BASE_URL: "${API_BASE_URL:-https://jsonplaceholder.typicode.com}"
+      PYTHONUNBUFFERED: "1"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
     volumes:
       - ./tests:/app/tests
       - ./allure-results:/app/allure-results
@@ -36,6 +36,19 @@ services:
     environment:
       CHECK_RESULTS_EVERY_SECONDS: 5
       KEEP_HISTORY: 1
+    networks:
+      - test-network
+
+  wiremock:
+    image: wiremock/wiremock:2.35.0
+    container_name: api-mock
+    profiles:
+      - mock
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./mocks:/home/wiremock
+    command: ["--verbose"]
     networks:
       - test-network
 

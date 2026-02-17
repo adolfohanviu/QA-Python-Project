@@ -7,6 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 @pytest.mark.api
+@pytest.mark.contract
 class TestUserAPI:
     """API tests for user endpoints"""
     

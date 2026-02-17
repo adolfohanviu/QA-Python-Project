@@ -8,6 +8,7 @@ Comprehensive end-to-end test automation framework built with Python, Pytest, an
 - **Pytest** - Flexible and scalable test framework with powerful fixtures
 - **Async Tests** - Native async test support via pytest-asyncio
 - **API Testing** - REST API testing with requests library and fixtures
+- **API Mocking** - WireMock offline mode for deterministic contract tests
 - **Allure Reporting** - HTML reports with steps, logs, and screenshots
 - **Headless Mode** - Environment- or CLI-controlled browser execution
 - **GitHub Actions CI/CD** - Automated test execution on push/PR with report publishing
@@ -30,6 +31,9 @@ tests/
 │   └── login_page.py      # Login page object
 ├── fixtures/              # Test data fixtures
 │   └── api_users.json     # API test data
+├── mocks/                 # WireMock mappings and responses
+│   ├── mappings/           # Request/response mappings
+│   └── __files/            # Mock response bodies
 ├── utils/                 # Utilities and helpers
 │   └── config.py          # Configuration management
 ├── features/              # Gherkin feature files (future)
@@ -113,6 +117,20 @@ pytest -m smoke -v        # Smoke tests only
 pytest -m regression -v   # Regression tests only
 pytest -m api -v         # API tests only
 pytest -m ui -v          # UI tests only
+pytest -m contract -v    # API contract tests only
+```
+
+### Tagging strategy (recommended)
+
+```bash
+# Only smoke tests
+pytest -m smoke -v
+
+# Regression without contract tests
+pytest -m "regression and not contract" -v
+
+# Contract tests (API + mocks)
+pytest -m contract -v
 ```
 
 ### Run with environment variables
@@ -246,6 +264,26 @@ docker run --rm \
   -e BASE_URL=https://www.saucedemo.com \
   -e API_BASE_URL=https://jsonplaceholder.typicode.com \
   qa-python-tests:latest pytest -v
+```
+
+### API Mocking (Offline Mode)
+
+Run API tests against local WireMock for deterministic, offline runs:
+
+```bash
+# Start WireMock + tests (offline mode)
+API_BASE_URL=http://wiremock:8080 docker-compose --profile mock up
+```
+
+Local WireMock only:
+
+```bash
+docker run --rm -p 8081:8080 \
+  -v %cd%/mocks:/home/wiremock \
+  wiremock/wiremock:2.35.0
+
+# Run tests pointing at local mock
+API_BASE_URL=http://localhost:8081 pytest -m contract -v
 ```
 
 ## Kubernetes Deployment
@@ -395,7 +433,10 @@ All workflows:
 - Install Python 3.11
 - Install Playwright browsers
 - Run tests with `HEADLESS=true`
-- Generate and publish Allure reports to GitHub Pages
+- Generate and publish Allure reports to GitHub Pages (Allure history dashboard)
+
+### Test Dashboard
+Allure reports include historical trend charts published to GitHub Pages, providing a lightweight dashboard for tracking test health over time.
 
 ## Logging
 
