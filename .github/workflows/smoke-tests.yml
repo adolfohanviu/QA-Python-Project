@@ -24,7 +24,7 @@ jobs:
       run: playwright install
     
     - name: Run smoke tests
-      run: pytest -m smoke -v --headless=true
+      run: pytest -m smoke -v
       env:
         BASE_URL: https://www.saucedemo.com
         API_BASE_URL: https://jsonplaceholder.typicode.com

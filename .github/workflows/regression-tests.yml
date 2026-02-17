@@ -24,7 +24,7 @@ jobs:
       run: playwright install
     
     - name: Run regression tests
-      run: pytest -m regression -v --headless=true
+      run: pytest -m regression -v
       env:
         BASE_URL: https://www.saucedemo.com
         API_BASE_URL: https://jsonplaceholder.typicode.com
