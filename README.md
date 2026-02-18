@@ -32,9 +32,6 @@ tests/
 │   └── login_page.py      # Login page object
 ├── fixtures/              # Test data fixtures
 │   └── api_users.json     # API test data
-├── mocks/                 # WireMock mappings and responses
-│   ├── mappings/           # Request/response mappings
-│   └── __files/            # Mock response bodies
 ├── utils/                 # Utilities and helpers
 │   └── config.py          # Configuration management
 ├── features/              # Gherkin feature files (future)
@@ -45,7 +42,12 @@ tests/
 .github/workflows/         # GitHub Actions CI/CD
 ├── all-tests.yml         # All tests workflow
 ├── smoke-tests.yml       # Smoke tests (daily schedule)
-└── regression-tests.yml  # Regression tests (daily schedule)
+├── regression-tests.yml  # Regression tests (daily schedule)
+└── docker-build.yml      # Docker build and test
+
+mocks/                    # WireMock mappings and responses
+├── mappings/             # Request/response mappings
+└── __files/              # Mock response bodies
 
 scripts/                   # Helper scripts
 ├── run.sh               # Bash wrapper (macOS/Linux)
@@ -337,31 +339,34 @@ pytest -n 4 -v       # Use 4 workers
 
 ### GitHub Actions Workflows
 
-Three automated workflows are configured:
+Four automated workflows are configured:
 
 **1. All Tests** - Runs on push/PR to main
 ```bash
 pytest -v
 ```
 
-**2. Smoke Tests** - Scheduled daily at 6 AM
+**2. Smoke Tests** - Scheduled daily at 6 AM + manual trigger
 ```bash
 pytest -m smoke -v
 ```
 
-**3. Regression Tests** - Scheduled daily at 10 PM
+**3. Regression Tests** - Scheduled daily at 10 PM + manual trigger
 ```bash
 pytest -m regression -v
+```
+
+**4. Docker Build & Test** - Runs on push/PR to main
+```bash
+docker build && docker run pytest -v
 ```
 
 All workflows:
 - Install Python 3.11
 - Install Playwright browsers
 - Run tests with `HEADLESS=true`
-- Generate and publish Allure reports to GitHub Pages (Allure history dashboard)
-
-### Test Dashboard
-Allure reports include historical trend charts published to GitHub Pages, providing a lightweight dashboard for tracking test health over time.
+- Generate Allure reports
+- Upload artifacts with 30-day retention
 
 ## Logging
 
