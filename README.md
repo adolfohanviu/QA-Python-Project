@@ -80,8 +80,8 @@ README.md                 # This file
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/adolfohanviu/QA-Python-Project.git
-cd QA-Python-Project
+git clone https://github.com/adolfohanviu/playwright-python-automation-framework.git
+cd playwright-python-automation-framework
 ```
 
 ### 2. Create virtual environment
