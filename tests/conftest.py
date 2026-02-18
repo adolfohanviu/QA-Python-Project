@@ -1,7 +1,7 @@
 import os
 import logging
 from pathlib import Path
-from typing import Generator
+from typing import AsyncGenerator
 import pytest
 import pytest_asyncio
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
@@ -11,20 +11,36 @@ logger = logging.getLogger(__name__)
 
 @pytest.fixture(scope="session")
 def headless() -> bool:
-    """Get headless mode from env or default to True"""
+    """Get headless mode from env or default to True
+    
+    Returns:
+        bool: True if headless mode enabled, False otherwise
+    """
     headless_env = os.getenv("HEADLESS", "true").lower()
     return headless_env != "false"
 
 
 @pytest.fixture(scope="session")
-def browser_type():
-    """Get browser type from env or default to chromium"""
+def browser_type() -> str:
+    """Get browser type from env or default to chromium
+    
+    Returns:
+        str: Browser type - chromium, firefox, or webkit
+    """
     return os.getenv("BROWSER_TYPE", "chromium")
 
 
-@pytest_asyncio.fixture
-async def browser(headless, browser_type) -> Generator[Browser, None, None]:
-    """Create browser instance"""
+@pytest_asyncio.fixture(scope="session")
+async def browser(headless: bool, browser_type: str) -> AsyncGenerator[Browser, None]:
+    """Create browser instance for the session
+    
+    Args:
+        headless: Whether to run in headless mode
+        browser_type: Type of browser to launch
+        
+    Yields:
+        Browser: Playwright browser instance
+    """
     async with async_playwright() as p:
         if browser_type == "firefox":
             browser = await p.firefox.launch(headless=headless)
@@ -33,39 +49,64 @@ async def browser(headless, browser_type) -> Generator[Browser, None, None]:
         else:  # chromium
             browser = await p.chromium.launch(headless=headless)
         
+        logger.info(f"Browser launched: {browser_type} (headless={headless})")
         yield browser
         await browser.close()
+        logger.info(f"Browser closed: {browser_type}")
 
 
 @pytest_asyncio.fixture
-async def context(browser) -> Generator[BrowserContext, None, None]:
-    """Create browser context"""
+async def context(browser: Browser) -> AsyncGenerator[BrowserContext, None]:
+    """Create browser context for each test
+    
+    Args:
+        browser: Browser instance from browser fixture
+        
+    Yields:
+        BrowserContext: Isolated browser context
+    """
     context = await browser.new_context()
     yield context
     await context.close()
 
 
 @pytest_asyncio.fixture
-async def page(context, request) -> Generator[Page, None, None]:
-    """Create page instance"""
+async def page(context: BrowserContext, request) -> AsyncGenerator[Page, None]:
+    """Create page instance for each test with failure screenshot capture
+    
+    Args:
+        context: Browser context from context fixture
+        request: pytest request object for test metadata
+        
+    Yields:
+        Page: Playwright page instance
+    """
     page = await context.new_page()
     test_name = request.node.nodeid.replace("::", "_").replace("/", "_").replace("\\", "_")
+    
     yield page
     
     # Take screenshot on failure
-    if not getattr(request.node, "_test_passed", True):
-        screenshot_dir = Path("tests/screenshots")
-        screenshot_dir.mkdir(parents=True, exist_ok=True)
-        screenshot_path = screenshot_dir / f"failure_{test_name}.png"
-        await page.screenshot(path=str(screenshot_path))
-        logger.info(f"Screenshot captured: {screenshot_path}")
-    
-    await page.close()
+    try:
+        if not getattr(request.node, "_test_passed", True):
+            screenshot_dir = Path("tests/screenshots")
+            screenshot_dir.mkdir(parents=True, exist_ok=True)
+            screenshot_path = screenshot_dir / f"failure_{test_name}.png"
+            await page.screenshot(path=str(screenshot_path))
+            logger.warning(f"Test failed. Screenshot captured: {screenshot_path}")
+    except Exception as e:
+        logger.error(f"Failed to capture screenshot: {str(e)}")
+    finally:
+        await page.close()
 
 
 @pytest.fixture(autouse=True)
 def test_context():
-    """Store test metadata"""
+    """Store test metadata - initializes passed state to True
+    
+    Yields:
+        Object: Test context object to track test state
+    """
     class TestContext:
         passed = True
         name = ""
@@ -75,14 +116,24 @@ def test_context():
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
-    """Capture test result"""
+    """Capture test result - marks failed tests for screenshot capture
+    
+    Args:
+        item: pytest Item object
+        call: pytest Call object
+    """
     outcome = yield
     if outcome.excinfo is not None:
         item._test_passed = False
+        logger.debug(f"Test failed: {item.nodeid}")
 
 
 def pytest_addoption(parser):
-    """Register custom CLI options"""
+    """Register custom CLI options for pytest
+    
+    Args:
+        parser: pytest parser instance
+    """
     parser.addoption(
         "--headless",
         action="store",
@@ -92,9 +143,15 @@ def pytest_addoption(parser):
 
 
 def pytest_configure(config):
-    """Apply CLI overrides to environment"""
+    """Apply CLI overrides to environment variables
+    
+    Args:
+        config: pytest config object
+    """
     headless_option = config.getoption("--headless")
     if headless_option is not None:
         os.environ["HEADLESS"] = str(headless_option).lower()
+        logger.info(f"Headless mode set via CLI: {headless_option}")
+
 
 

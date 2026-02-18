@@ -6,15 +6,29 @@ logger = logging.getLogger(__name__)
 
 
 class LoginPage(BasePage):
-    """Login page object"""
+    """Login page object for Sauce Demo application.
     
+    Handles login functionality and error state management.
+    Inherits common page functionality from BasePage.
+    """
+    
+    # Selectors for login form elements
     USERNAME_INPUT = "[data-test='username']"
     PASSWORD_INPUT = "[data-test='password']"
     LOGIN_BUTTON = "[data-test='login-button']"
     ERROR_MESSAGE = "[data-test='error']"
     
     async def login(self, username: str, password: str):
-        """Perform login"""
+        """Perform login with username and password
+        
+        Args:
+            username (str): Username to log in with
+            password (str): Password to log in with
+            
+        Note:
+            Waits for navigation to inventory page on success,
+            or checks for error message on failure.
+        """
         logger.info(f"Logging in with username: {username}")
         await self.fill_text(self.USERNAME_INPUT, username)
         await self.fill_text(self.PASSWORD_INPUT, password)
@@ -24,12 +38,20 @@ class LoginPage(BasePage):
         try:
             await self.page.wait_for_url("**/inventory.html", timeout=5000)
             logger.info("Login successful")
-        except:
+        except Exception as e:
+            logger.debug(f"Navigation timeout or error: {type(e).__name__}")
             # Check for error message
             if await self.is_visible(self.ERROR_MESSAGE):
                 error = await self.get_text(self.ERROR_MESSAGE)
                 logger.error(f"Login failed: {error}")
     
     async def get_error_message(self) -> str:
-        """Get error message text"""
+        """Get error message text from login form
+        
+        Returns:
+            str: Error message text
+            
+        Raises:
+            PlaywrightError: If error message not found
+        """
         return await self.get_text(self.ERROR_MESSAGE)

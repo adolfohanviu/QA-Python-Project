@@ -33,11 +33,17 @@ class Config:
             )
         )
         
-        with open(fixture_path, "r") as f:
-            fixtures = json.load(f)
+        try:
+            with open(fixture_path, "r") as f:
+                fixtures = json.load(f)
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Fixture file not found: {fixture_path}")
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in fixture file {fixture_path}: {str(e)}")
         
         if fixture_name not in fixtures:
-            raise ValueError(f"Fixture '{fixture_name}' not found in {fixture_path}")
+            available = ", ".join(fixtures.keys())
+            raise KeyError(f"Fixture '{fixture_name}' not found. Available: {available}")
         
         return fixtures[fixture_name]
 

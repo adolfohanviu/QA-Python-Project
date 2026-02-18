@@ -10,16 +10,15 @@ Comprehensive end-to-end test automation framework built with Python, Pytest, an
 - **Pytest** - Flexible and scalable test framework with powerful fixtures
 - **Async Tests** - Native async test support via pytest-asyncio
 - **API Testing** - REST API testing with requests library and fixtures
-- **API Mocking** - WireMock offline mode for deterministic contract tests
 - **Allure Reporting** - HTML reports with steps, logs, and screenshots
 - **Headless Mode** - Environment- or CLI-controlled browser execution
-- **GitHub Actions CI/CD** - Automated test execution on push/PR with report publishing
-- **Page Object Model** - Maintainable UI test structure
+- **GitHub Actions CI/CD** - Automated test execution on push/PR with artifacts
+- **Page Object Model** - Maintainable, scalable UI test structure
 - **Test Data Fixtures** - JSON-based test data management
 - **Multi-browser Support** - Chromium, Firefox, WebKit
-- **Docker** - Containerized testing with multi-stage builds and compose
-- **Kubernetes** - Production-grade cluster deployment with RBAC and ConfigMaps
-- **Logging** - Comprehensive logging with CLI and file output
+- **Comprehensive Logging** - Structured logging with CLI and file output
+- **Docker Support** - Containerized testing with compose
+- **Kubernetes Ready** - Production deployment manifests included
 
 ## Project Structure
 
@@ -46,24 +45,22 @@ tests/
 .github/workflows/         # GitHub Actions CI/CD
 ├── all-tests.yml         # All tests workflow
 ├── smoke-tests.yml       # Smoke tests (daily schedule)
-├── regression-tests.yml  # Regression tests (daily schedule)
-└── docker-build.yml      # Docker build and push workflow
+└── regression-tests.yml  # Regression tests (daily schedule)
 
 scripts/                   # Helper scripts
 ├── run.sh               # Bash wrapper (macOS/Linux)
 └── run.ps1              # PowerShell wrapper (Windows)
 
-k8s/                      # Kubernetes manifests
+Docker/                    # Container configuration
+├── Dockerfile            # Multi-stage build
+└── docker-compose.yml    # Local development compose
+
+k8s/                      # Kubernetes manifests (future)
 ├── namespace.yaml        # QA automation namespace
 ├── configmap.yaml        # Configuration management
 ├── rbac.yaml             # Role-based access control
 ├── job.yaml              # Test execution job
 └── deployment.yaml       # Allure report UI deployment
-
-Docker/                    # Container configuration
-├── Dockerfile            # Multi-stage build
-├── docker-compose.yml    # Local development compose
-└── .dockerignore         # Build context exclusions
 
 config/                    # Configuration files
 requirements.txt           # Python dependencies
@@ -119,7 +116,6 @@ pytest -m smoke -v        # Smoke tests only
 pytest -m regression -v   # Regression tests only
 pytest -m api -v         # API tests only
 pytest -m ui -v          # UI tests only
-pytest -m contract -v    # API contract tests only
 ```
 
 ### Tagging strategy (recommended)
@@ -130,9 +126,6 @@ pytest -m smoke -v
 
 # Regression without contract tests
 pytest -m "regression and not contract" -v
-
-# Contract tests (API + mocks)
-pytest -m contract -v
 ```
 
 ### Run with environment variables
@@ -266,76 +259,6 @@ docker run --rm \
   -e BASE_URL=https://www.saucedemo.com \
   -e API_BASE_URL=https://jsonplaceholder.typicode.com \
   qa-python-tests:latest pytest -v
-```
-
-### API Mocking (Offline Mode)
-
-Run API tests against local WireMock for deterministic, offline runs:
-
-```bash
-# Start WireMock + tests (offline mode)
-API_BASE_URL=http://wiremock:8080 docker-compose --profile mock up
-```
-
-Local WireMock only:
-
-```bash
-docker run --rm -p 8081:8080 \
-  -v %cd%/mocks:/home/wiremock \
-  wiremock/wiremock:2.35.0
-
-# Run tests pointing at local mock
-API_BASE_URL=http://localhost:8081 pytest -m contract -v
-```
-
-## Kubernetes Deployment
-
-Deploy tests and monitoring infrastructure to Kubernetes cluster:
-
-### Prerequisites
-- Kubernetes cluster (v1.20+)
-- kubectl configured
-- Docker image pushed to registry
-
-### Deploy Resources
-
-```bash
-# Create namespace
-kubectl apply -f k8s/namespace.yaml
-
-# Create configuration
-kubectl apply -f k8s/configmap.yaml
-
-# Setup RBAC
-kubectl apply -f k8s/rbac.yaml
-
-# Deploy Allure report UI
-kubectl apply -f k8s/deployment.yaml
-
-# Run test job
-kubectl apply -f k8s/job.yaml
-```
-
-### Monitor Test Execution
-
-```bash
-# List running jobs
-kubectl get jobs -n qa-automation
-
-# View test pod logs
-kubectl logs -n qa-automation -l app=qa-test-runner
-
-# Get test results
-kubectl exec -n qa-automation <pod-name> -- cat /app/allure-results/*
-```
-
-### Access Allure UI
-
-```bash
-# Port forward to local machine
-kubectl port-forward -n qa-automation svc/allure-report-service 4040:80
-
-# Open browser: http://localhost:4040
 ```
 
 ## Allure Reports
