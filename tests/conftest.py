@@ -1,5 +1,6 @@
 import os
 import logging
+import asyncio
 from pathlib import Path
 from typing import AsyncGenerator
 import pytest
@@ -7,6 +8,15 @@ import pytest_asyncio
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
 
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create an event loop for the test session."""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    yield loop
+    loop.close()
 
 
 @pytest.fixture(scope="session")
@@ -30,9 +40,9 @@ def browser_type() -> str:
     return os.getenv("BROWSER_TYPE", "chromium")
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture(scope="function")
 async def browser(headless: bool, browser_type: str) -> AsyncGenerator[Browser, None]:
-    """Create browser instance for the session
+    """Create browser instance for each test function
     
     Args:
         headless: Whether to run in headless mode
