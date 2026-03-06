@@ -6,6 +6,16 @@ from typing import AsyncGenerator
 import pytest
 import pytest_asyncio
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
+from tests.utils.observability import (
+    configure_observability_file_logging,
+    emit_event,
+    init_observability,
+    new_trace_id,
+    observability_enabled,
+    reset_trace_id,
+    set_trace_id,
+    shutdown_observability,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -124,6 +134,27 @@ def test_context():
     yield TestContext()
 
 
+@pytest.fixture(autouse=True)
+def observability_test_context(request):
+    """Create a trace context per test when observability is enabled."""
+    if not observability_enabled():
+        yield
+        return
+
+    trace_id = new_trace_id()
+    token = set_trace_id(trace_id)
+    emit_event("test_start", test_name=request.node.nodeid)
+    try:
+        yield
+    finally:
+        emit_event(
+            "test_end",
+            test_name=request.node.nodeid,
+            passed=getattr(request.node, "_test_passed", True),
+        )
+        reset_trace_id(token)
+
+
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     """Capture test result - marks failed tests for screenshot capture
@@ -162,6 +193,18 @@ def pytest_configure(config):
     if headless_option is not None:
         os.environ["HEADLESS"] = str(headless_option).lower()
         logger.info(f"Headless mode set via CLI: {headless_option}")
+
+    if observability_enabled():
+        configure_observability_file_logging()
+        init_observability(service_name="qa-portfolio-tests")
+        emit_event("observability_initialized")
+
+
+def pytest_unconfigure(config):
+    """Shutdown trace exporter on pytest teardown."""
+    if observability_enabled():
+        emit_event("observability_shutdown")
+        shutdown_observability()
 
 
 
