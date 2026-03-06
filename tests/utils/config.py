@@ -19,7 +19,7 @@ class Config:
         self.timeout = int(os.getenv("TIMEOUT", "30000"))
         self.log_level = os.getenv("LOG_LEVEL", "INFO")
         
-        logger.info(f"Config loaded: BASE_URL={self.base_url}, HEADLESS={self.headless}")
+        logger.info("Config loaded: BASE_URL=%s, HEADLESS=%s", self.base_url, self.headless)
     
     @staticmethod
     def load_fixture(fixture_name: str) -> Dict[str, Any]:
@@ -34,12 +34,12 @@ class Config:
         )
         
         try:
-            with open(fixture_path, "r") as f:
-                fixtures = json.load(f)
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Fixture file not found: {fixture_path}")
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Invalid JSON in fixture file {fixture_path}: {str(e)}")
+            with open(fixture_path, "r", encoding="utf-8") as fixture_file:
+                fixtures = json.load(fixture_file)
+        except FileNotFoundError as exc:
+            raise FileNotFoundError(f"Fixture file not found: {fixture_path}") from exc
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Invalid JSON in fixture file {fixture_path}: {str(exc)}") from exc
         
         if fixture_name not in fixtures:
             available = ", ".join(fixtures.keys())

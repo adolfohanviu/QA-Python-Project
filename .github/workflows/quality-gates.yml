@@ -1,0 +1,35 @@
+name: Quality Gates
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: pip install -r requirements.txt
+
+    - name: flake8 quality gate
+      run: flake8 tests
+
+    - name: pylint quality gate
+      run: pylint tests/api tests/utils tests/steps --disable=R,C --fail-under=8.5
+
+    - name: API regression gate
+      run: pytest -m "api" -v
+      env:
+        API_BASE_URL: https://jsonplaceholder.typicode.com
+        HEADLESS: true

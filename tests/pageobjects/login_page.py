@@ -1,5 +1,4 @@
 import logging
-from playwright.async_api import Page
 from tests.pageobjects.base_page import BasePage
 
 logger = logging.getLogger(__name__)
