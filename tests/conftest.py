@@ -3,6 +3,10 @@ import logging
 import asyncio
 from pathlib import Path
 from typing import AsyncGenerator
+
+# pytest fixtures and hooks intentionally use injected names/arguments.
+# pylint: disable=redefined-outer-name,protected-access,unused-argument
+
 import pytest
 import pytest_asyncio
 from playwright.async_api import async_playwright, Browser, BrowserContext, Page
@@ -69,10 +73,10 @@ async def browser(headless: bool, browser_type: str) -> AsyncGenerator[Browser, 
         else:  # chromium
             browser = await p.chromium.launch(headless=headless)
         
-        logger.info(f"Browser launched: {browser_type} (headless={headless})")
+        logger.info("Browser launched: %s (headless=%s)", browser_type, headless)
         yield browser
         await browser.close()
-        logger.info(f"Browser closed: {browser_type}")
+        logger.info("Browser closed: %s", browser_type)
 
 
 @pytest_asyncio.fixture
@@ -113,9 +117,9 @@ async def page(context: BrowserContext, request) -> AsyncGenerator[Page, None]:
             screenshot_dir.mkdir(parents=True, exist_ok=True)
             screenshot_path = screenshot_dir / f"failure_{test_name}.png"
             await page.screenshot(path=str(screenshot_path))
-            logger.warning(f"Test failed. Screenshot captured: {screenshot_path}")
-    except Exception as e:
-        logger.error(f"Failed to capture screenshot: {str(e)}")
+            logger.warning("Test failed. Screenshot captured: %s", screenshot_path)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        logger.error("Failed to capture screenshot: %s", str(exc))
     finally:
         await page.close()
 
@@ -166,7 +170,7 @@ def pytest_runtest_makereport(item, call):
     outcome = yield
     if outcome.excinfo is not None:
         item._test_passed = False
-        logger.debug(f"Test failed: {item.nodeid}")
+        logger.debug("Test failed: %s", item.nodeid)
 
 
 def pytest_addoption(parser):
@@ -192,7 +196,7 @@ def pytest_configure(config):
     headless_option = config.getoption("--headless")
     if headless_option is not None:
         os.environ["HEADLESS"] = str(headless_option).lower()
-        logger.info(f"Headless mode set via CLI: {headless_option}")
+        logger.info("Headless mode set via CLI: %s", headless_option)
 
     if observability_enabled():
         configure_observability_file_logging()

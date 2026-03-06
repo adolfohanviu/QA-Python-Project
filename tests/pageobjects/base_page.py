@@ -29,7 +29,7 @@ class BasePage:
         Raises:
             PlaywrightError: If navigation fails or times out
         """
-        logger.info(f"Navigating to {url}")
+        logger.info("Navigating to %s", url)
         await self.page.goto(url, timeout=timeout)
     
     async def fill_text(self, selector: str, text: str):
@@ -42,7 +42,7 @@ class BasePage:
         Raises:
             PlaywrightError: If element not found or not fillable
         """
-        logger.info(f"Filling {selector} with text")
+        logger.info("Filling %s with text", selector)
         await self.page.fill(selector, text)
     
     async def click(self, selector: str):
@@ -54,7 +54,7 @@ class BasePage:
         Raises:
             PlaywrightError: If element not found or not clickable
         """
-        logger.info(f"Clicking {selector}")
+        logger.info("Clicking %s", selector)
         await self.page.click(selector)
     
     async def is_visible(self, selector: str) -> bool:
@@ -81,7 +81,7 @@ class BasePage:
             PlaywrightError: If element not found
         """
         text = await self.page.text_content(selector)
-        logger.debug(f"Retrieved text from {selector}: {text}")
+        logger.debug("Retrieved text from %s: %s", selector, text)
         return text
     
     async def take_screenshot(self, name: str):
@@ -94,5 +94,5 @@ class BasePage:
             PlaywrightError: If screenshot capture fails
         """
         await self.page.screenshot(path=f"tests/screenshots/{name}.png")
-        logger.info(f"Screenshot taken: {name}")
+        logger.info("Screenshot taken: %s", name)
 

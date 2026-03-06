@@ -3,6 +3,9 @@ import logging
 from tests.pageobjects.login_page import LoginPage
 from tests.utils.config import config
 
+# pytest class setup assigns fixture-backed attributes intentionally.
+# pylint: disable=attribute-defined-outside-init
+
 logger = logging.getLogger(__name__)
 
 

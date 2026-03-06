@@ -1,10 +1,10 @@
-# Playwright Automation Framework (Python)
+# Senior QA Platform Engineering Portfolio - Playwright Python Framework
 
-Comprehensive end-to-end test automation framework built with Python, Pytest, and Playwright. Designed for UI and API testing with Allure reporting, headless execution, and CI/CD integration.
+Comprehensive QA platform engineering project built with Python, Pytest, and Playwright, covering UI/API automation, BDD scenarios, CI quality gates (flake8 and pylint), performance testing with JMeter, Docker/Kubernetes validation flows, and LGTM observability (Loki, Grafana, Tempo, Prometheus) for timestamp-correlated root-cause analysis.
 
-> **Status**: ✅ CI/CD pipelines configured and passing - All Tests, Smoke Tests, Regression Tests
+> **Status**: ✅ End-to-end portfolio implementation active - UI/API automation, BDD, Quality Gates, Performance, Docker/K8s validation, and LGTM observability
 
-[![Quality Gates](https://github.com/adolfohanviu/playwright-python-automation-framework/actions/workflows/quality-gates.yml/badge.svg)](https://github.com/adolfohanviu/playwright-python-automation-framework/actions/workflows/quality-gates.yml)
+[![Quality Gates](https://github.com/adolfohanviu/python-qa-platform-framework/actions/workflows/quality-gates.yml/badge.svg)](https://github.com/adolfohanviu/python-qa-platform-framework/actions/workflows/quality-gates.yml)
 
 ## Features
 
@@ -22,9 +22,7 @@ Comprehensive end-to-end test automation framework built with Python, Pytest, an
 - **Docker Support** - Containerized testing with compose
 - **Kubernetes Ready** - Production deployment manifests included
 
-## Senior QA Platform Engineer Stack (Indra ATM)
-
-Tech stack used in production at **Indra ATM (May 2024 - Mar 2025)** and reflected in this portfolio direction:
+## Senior QA Platform Engineer Stack
 
 - **Core Framework Architecture** - three-layer Python/Pytest design (utilities, fixtures, tests)
 - **Automation & Validation** - fast REST API suites and BDD with Cucumber/Gherkin + `pytest-bdd`
@@ -113,8 +111,8 @@ README.md                 # This file
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/adolfohanviu/playwright-python-automation-framework.git
-cd playwright-python-automation-framework
+git clone https://github.com/adolfohanviu/python-qa-platform-framework.git
+cd python-qa-platform-framework
 ```
 
 ### 2. Create virtual environment

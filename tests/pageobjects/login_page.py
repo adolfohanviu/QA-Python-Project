@@ -1,4 +1,5 @@
 import logging
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 from tests.pageobjects.base_page import BasePage
 
 logger = logging.getLogger(__name__)
@@ -28,7 +29,7 @@ class LoginPage(BasePage):
             Waits for navigation to inventory page on success,
             or checks for error message on failure.
         """
-        logger.info(f"Logging in with username: {username}")
+        logger.info("Logging in with username: %s", username)
         await self.fill_text(self.USERNAME_INPUT, username)
         await self.fill_text(self.PASSWORD_INPUT, password)
         await self.click(self.LOGIN_BUTTON)
@@ -37,12 +38,12 @@ class LoginPage(BasePage):
         try:
             await self.page.wait_for_url("**/inventory.html", timeout=5000)
             logger.info("Login successful")
-        except Exception as e:
-            logger.debug(f"Navigation timeout or error: {type(e).__name__}")
+        except PlaywrightTimeoutError as exc:
+            logger.debug("Navigation timeout during login: %s", type(exc).__name__)
             # Check for error message
             if await self.is_visible(self.ERROR_MESSAGE):
                 error = await self.get_text(self.ERROR_MESSAGE)
-                logger.error(f"Login failed: {error}")
+                logger.error("Login failed: %s", error)
     
     async def get_error_message(self) -> str:
         """Get error message text from login form
