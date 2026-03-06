@@ -22,6 +22,7 @@ allure-reports/
 .allure/
 *.log
 tests/screenshots/
+performance/results/
 
 # Docker
 docker-compose.override.yml

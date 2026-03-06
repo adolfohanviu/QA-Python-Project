@@ -4,6 +4,8 @@ Comprehensive end-to-end test automation framework built with Python, Pytest, an
 
 > **Status**: ✅ CI/CD pipelines configured and passing - All Tests, Smoke Tests, Regression Tests
 
+[![Quality Gates](https://github.com/adolfohanviu/playwright-python-automation-framework/actions/workflows/quality-gates.yml/badge.svg)](https://github.com/adolfohanviu/playwright-python-automation-framework/actions/workflows/quality-gates.yml)
+
 ## Features
 
 - **Playwright** - Modern cross-browser automation with async/await support
@@ -19,6 +21,18 @@ Comprehensive end-to-end test automation framework built with Python, Pytest, an
 - **Comprehensive Logging** - Structured logging with CLI and file output
 - **Docker Support** - Containerized testing with compose
 - **Kubernetes Ready** - Production deployment manifests included
+
+## Senior QA Platform Engineer Stack (Indra ATM)
+
+Tech stack used in production at **Indra ATM (May 2024 - Mar 2025)** and reflected in this portfolio direction:
+
+- **Core Framework Architecture** - three-layer Python/Pytest design (utilities, fixtures, tests)
+- **Automation & Validation** - fast REST API suites and BDD with Cucumber/Gherkin + `pytest-bdd`
+- **AI-Assisted QA Workflows** - state-machine coverage generation, API exploration, CI failure pattern analysis, secure prompting practices
+- **Quality Gates** - flake8 + PEP 8 checks in Buildbot, Pylint feedback in VS Code
+- **Performance Engineering** - JMeter test execution with Grafana trend analysis
+- **Platform Validation** - Docker and Kubernetes deployment checks automated as part of QA flows
+- **Observability** - LGTM stack (Loki, Grafana, Tempo, Prometheus) for timestamp-correlated root-cause analysis
 
 ## Project Structure
 
@@ -43,7 +57,13 @@ tests/
 ├── all-tests.yml         # All tests workflow
 ├── smoke-tests.yml       # Smoke tests (daily schedule)
 ├── regression-tests.yml  # Regression tests (daily schedule)
-└── docker-build.yml      # Docker build and test
+├── docker-build.yml      # Docker build and test
+├── quality-gates.yml     # flake8 + pylint + API gate
+└── performance-tests.yml # JMeter performance workflow
+
+performance/               # Performance test assets
+└── jmeter/
+  └── user_api_load_test.jmx  # JMeter load plan
 
 mocks/                    # WireMock mappings and responses
 ├── mappings/             # Request/response mappings
@@ -51,7 +71,20 @@ mocks/                    # WireMock mappings and responses
 
 scripts/                   # Helper scripts
 ├── run.sh               # Bash wrapper (macOS/Linux)
-└── run.ps1              # PowerShell wrapper (Windows)
+├── run.ps1              # PowerShell wrapper (Windows)
+├── run-performance.sh   # JMeter performance runner (macOS/Linux)
+├── run-performance.ps1  # JMeter performance runner (Windows)
+├── run-observability.sh # Start LGTM stack (macOS/Linux)
+├── run-observability.ps1# Start LGTM stack (Windows)
+├── stop-observability.sh # Stop LGTM stack (macOS/Linux)
+└── stop-observability.ps1# Stop LGTM stack (Windows)
+
+observability/             # LGTM stack configuration
+├── loki/                  # Loki config
+├── promtail/              # Promtail log scraping config
+├── tempo/                 # Tempo tracing config
+├── prometheus/            # Prometheus scrape config
+└── grafana/               # Grafana datasource provisioning
 
 Docker/                    # Container configuration
 ├── Dockerfile            # Multi-stage build
@@ -118,6 +151,13 @@ pytest -m smoke -v        # Smoke tests only
 pytest -m regression -v   # Regression tests only
 pytest -m api -v         # API tests only
 pytest -m ui -v          # UI tests only
+pytest -m bdd -v         # BDD scenarios only
+```
+
+### Run BDD scenarios directly
+```bash
+pytest tests/steps/test_user_api_bdd.py -v
+pytest tests/steps/test_login_bdd.py -v
 ```
 
 ### Tagging strategy (recommended)
@@ -335,11 +375,72 @@ pytest -n auto -v    # Auto-detect number of cores
 pytest -n 4 -v       # Use 4 workers
 ```
 
+## Performance Testing (JMeter)
+
+Run JMeter performance tests with provided scripts:
+
+```powershell
+.\scripts\run-performance.ps1
+```
+
+```bash
+bash scripts/run-performance.sh
+```
+
+Requirements for these scripts: local `jmeter` installed or Docker daemon running.
+
+## Observability (LGTM)
+
+Start observability stack:
+
+```powershell
+.\scripts\run-observability.ps1
+```
+
+```bash
+bash scripts/run-observability.sh
+```
+
+Run tests with observability enabled (logs + traces):
+
+```powershell
+$env:OBSERVABILITY_ENABLED="true"
+$env:OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318"
+pytest -m "api or bdd" -v
+```
+
+```bash
+OBSERVABILITY_ENABLED=true OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 pytest -m "api or bdd" -v
+```
+
+Stop observability stack:
+
+```powershell
+.\scripts\stop-observability.ps1
+```
+
+```bash
+bash scripts/stop-observability.sh
+```
+
+Default endpoints:
+- Grafana: `http://localhost:3000` (`admin/admin`)
+- Loki: `http://localhost:3100`
+- Tempo: `http://localhost:3200`
+- Prometheus: `http://localhost:9090`
+
+Log output file for Loki scraping:
+- `logs/qa-tests.log`
+
+Outputs are generated under `performance/results/`:
+- `results.jtl` (raw execution metrics)
+- `html-report/` (visual summary report)
+
 ## CI/CD Integration
 
 ### GitHub Actions Workflows
 
-Four automated workflows are configured:
+Six automated workflows are configured:
 
 **1. All Tests** - Runs on push/PR to main
 ```bash
@@ -361,12 +462,37 @@ pytest -m regression -v
 docker build && docker run pytest -v
 ```
 
+**5. Quality Gates** - Runs on push/PR to main + manual trigger
+```bash
+flake8 tests
+pylint tests/api tests/utils tests/steps --disable=R,C --fail-under=8.5
+pytest -m "api" -v
+```
+
+**6. Performance Tests** - Weekly schedule + manual trigger
+```bash
+jmeter -n -t performance/jmeter/user_api_load_test.jmx -l performance/results/results.jtl
+```
+
 All workflows:
 - Install Python 3.11
 - Install Playwright browsers
 - Run tests with `HEADLESS=true`
 - Generate Allure reports
 - Upload artifacts with 30-day retention
+
+## Verification Evidence (Mar 6, 2026)
+
+Local validation executed for the portfolio implementation:
+
+- `pytest -m "api or bdd" -v` -> `8 passed, 2 deselected`
+- `OBSERVABILITY_ENABLED=true OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 pytest -m "api or bdd" -v` -> `8 passed, 2 deselected`
+- `flake8 tests` -> passed
+- `pylint tests/api tests/utils tests/steps --disable=R,C --fail-under=8.5` -> `10.00/10` (pass threshold)
+- `scripts/run-performance.ps1` -> passed via Docker fallback (`justb4/jmeter:latest`), generated:
+  - `performance/results/results.jtl`
+  - `performance/results/html-report/`
+- Observability evidence generated in `logs/qa-tests.log` with timestamped JSON events (`test_start`, `api_request`, `test_end`).
 
 ## Logging
 
