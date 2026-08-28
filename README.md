@@ -28,9 +28,9 @@ Comprehensive QA platform engineering project built with Python, Pytest, and Pla
 - **Automation & Validation** - fast REST API suites and BDD with Cucumber/Gherkin + `pytest-bdd`
 - **Resilience Testing** - retry/backoff and timeout handling verified against fault-injected WireMock scenarios (502/503/504, connection drops, slow responses) - see [Resilience testing](#resilience-testing-fault-injection) below
 - **AI-Assisted QA Workflows** - Claude Code skills for failure triage and BDD scaffolding, an LLM-backed CI failure-triage step, and a versioned, injection-aware prompt template - see [AI-Assisted QA Engineering](#ai-assisted-qa-engineering) below
-- **Quality Gates** - flake8 + PEP 8 checks in Buildbot, Pylint feedback in VS Code
+- **Quality Gates** - flake8 + PEP 8 and Pylint checks enforced as hard CI gates (see `.github/workflows/quality-gates.yml`)
 - **Performance Engineering** - JMeter test execution with Grafana trend analysis
-- **Platform Validation** - Docker and Kubernetes deployment checks automated as part of QA flows
+- **Platform Validation** - Docker image build gated in CI (`docker-build.yml`); Kubernetes manifests under `k8s/` are included as deployment reference and are not yet applied/validated by CI
 - **Observability** - LGTM stack (Loki, Grafana, Tempo, Prometheus) for timestamp-correlated root-cause analysis
 
 ## Project Structure
