@@ -36,3 +36,18 @@ jobs:
 
     - name: AI failure triage unit tests
       run: pytest -m "unit" -v
+
+    - name: Start WireMock mock
+      run: docker compose --profile mock up -d wiremock
+
+    - name: Wait for WireMock
+      run: timeout 30 bash -c 'until curl -sf http://localhost:8081/__admin/mappings; do sleep 1; done'
+
+    - name: Resilience gate (fault-injected retry/timeout)
+      run: pytest -m "resilience" -v
+      env:
+        WIREMOCK_BASE_URL: http://localhost:8081
+
+    - name: Stop WireMock mock
+      if: always()
+      run: docker compose --profile mock down

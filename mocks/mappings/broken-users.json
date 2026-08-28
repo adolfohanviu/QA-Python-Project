@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/broken-users"
+  },
+  "response": {
+    "status": 503,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": "{\"error\": \"temporarily unavailable\"}"
+  }
+}

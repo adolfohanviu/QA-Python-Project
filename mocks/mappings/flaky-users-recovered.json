@@ -1,0 +1,15 @@
+{
+  "scenarioName": "flaky-users",
+  "requiredScenarioState": "Recovered",
+  "request": {
+    "method": "GET",
+    "url": "/flaky-users"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "users.json"
+  }
+}

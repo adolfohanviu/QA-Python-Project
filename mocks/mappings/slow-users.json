@@ -1,0 +1,14 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/slow-users"
+  },
+  "response": {
+    "status": 200,
+    "fixedDelayMilliseconds": 3000,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "users.json"
+  }
+}

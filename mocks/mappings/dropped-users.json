@@ -1,0 +1,12 @@
+{
+  "scenarioName": "dropped-users",
+  "requiredScenarioState": "Started",
+  "newScenarioState": "Recovered",
+  "request": {
+    "method": "GET",
+    "url": "/dropped-users"
+  },
+  "response": {
+    "fault": "CONNECTION_RESET_BY_PEER"
+  }
+}

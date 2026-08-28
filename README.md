@@ -26,6 +26,7 @@ Comprehensive QA platform engineering project built with Python, Pytest, and Pla
 
 - **Core Framework Architecture** - three-layer Python/Pytest design (utilities, fixtures, tests)
 - **Automation & Validation** - fast REST API suites and BDD with Cucumber/Gherkin + `pytest-bdd`
+- **Resilience Testing** - retry/backoff and timeout handling verified against fault-injected WireMock scenarios (502/503/504, connection drops, slow responses) - see [Resilience testing](#resilience-testing-fault-injection) below
 - **AI-Assisted QA Workflows** - Claude Code skills for failure triage and BDD scaffolding, an LLM-backed CI failure-triage step, and a versioned, injection-aware prompt template - see [AI-Assisted QA Engineering](#ai-assisted-qa-engineering) below
 - **Quality Gates** - flake8 + PEP 8 checks in Buildbot, Pylint feedback in VS Code
 - **Performance Engineering** - JMeter test execution with Grafana trend analysis
@@ -352,6 +353,29 @@ data = response.get_json()
 assert client.get_status_code() == 200
 ```
 
+### Resilience testing (fault injection)
+
+`APIClient.get()` retries on `502`/`503`/`504` and on connection/read timeouts (2 retries,
+exponential backoff), emitting an `api_retry` observability event per attempt so a retry
+storm is visible in the same trace as the request it belongs to. POST/PUT/DELETE don't
+retry automatically - this API has no idempotency key, so blindly replaying a write could
+double-submit it.
+
+This can't be exercised against the real jsonplaceholder API (it doesn't fail on demand),
+so `tests/api/test_resilience.py` runs against the WireMock mock instead, using
+scenario-based mappings under `mocks/mappings/` (`flaky-users` fails twice then recovers,
+`dropped-users` resets the connection once then recovers, `broken-users` always fails,
+`slow-users` delays past the client timeout):
+
+```bash
+docker compose --profile mock up -d wiremock
+pytest -m "resilience" -v
+```
+
+Skips cleanly (not a failure) if WireMock isn't running - it's a hard gate in
+`quality-gates.yml`, which starts the mock service itself, but not part of the default
+`pytest -v` run.
+
 ## Page Object Model (POM)
 
 ### Creating page objects
@@ -517,6 +541,7 @@ flake8 tests scripts
 pylint tests/api tests/utils tests/steps scripts --disable=R,C --fail-under=8.5
 pytest -m "api" -v
 pytest -m "unit" -v
+docker compose --profile mock up -d wiremock && pytest -m "resilience" -v
 ```
 
 **6. Performance Tests** - Weekly schedule + manual trigger

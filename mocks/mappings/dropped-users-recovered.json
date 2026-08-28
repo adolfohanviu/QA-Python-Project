@@ -1,0 +1,15 @@
+{
+  "scenarioName": "dropped-users",
+  "requiredScenarioState": "Recovered",
+  "request": {
+    "method": "GET",
+    "url": "/dropped-users"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "bodyFileName": "users.json"
+  }
+}

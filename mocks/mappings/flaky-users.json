@@ -1,0 +1,16 @@
+{
+  "scenarioName": "flaky-users",
+  "requiredScenarioState": "Started",
+  "newScenarioState": "Failed once",
+  "request": {
+    "method": "GET",
+    "url": "/flaky-users"
+  },
+  "response": {
+    "status": 503,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": "{\"error\": \"temporarily unavailable\"}"
+  }
+}
