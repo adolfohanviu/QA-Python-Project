@@ -46,7 +46,7 @@ tests/
 │   └── api_users.json     # API test data
 ├── utils/                 # Utilities and helpers
 │   └── config.py          # Configuration management
-├── features/              # Gherkin feature files (future)
+├── features/              # Gherkin feature files (login.feature, user_api.feature)
 ├── screenshots/           # Failure screenshots
 ├── unit/                  # Unit tests for AI triage logic (no browser/network)
 │   └── test_ai_failure_triage.py
@@ -100,7 +100,7 @@ Docker/                    # Container configuration
 ├── Dockerfile            # Multi-stage build
 └── docker-compose.yml    # Local development compose
 
-k8s/                      # Kubernetes manifests (future)
+k8s/                      # Kubernetes manifests
 ├── namespace.yaml        # QA automation namespace
 ├── configmap.yaml        # Configuration management
 ├── rbac.yaml             # Role-based access control
