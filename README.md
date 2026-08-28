@@ -4,7 +4,7 @@ Comprehensive QA platform engineering project built with Python, Pytest, and Pla
 
 > **Status**: ✅ End-to-end portfolio implementation active - UI/API automation, BDD, Quality Gates, Performance, Docker/K8s validation, and LGTM observability
 
-[![Quality Gates](https://github.com/adolfohanviu/python-qa-platform-framework/actions/workflows/quality-gates.yml/badge.svg)](https://github.com/adolfohanviu/python-qa-platform-framework/actions/workflows/quality-gates.yml)
+[![Quality Gates](https://github.com/adolfohanviu/python-qa-platform/actions/workflows/quality-gates.yml/badge.svg)](https://github.com/adolfohanviu/python-qa-platform/actions/workflows/quality-gates.yml)
 
 ## Features
 
@@ -124,8 +124,8 @@ README.md                 # This file
 
 ### 1. Clone the repository
 ```bash
-git clone https://github.com/adolfohanviu/python-qa-platform-framework.git
-cd python-qa-platform-framework
+git clone https://github.com/adolfohanviu/python-qa-platform.git
+cd python-qa-platform
 ```
 
 ### 2. Create virtual environment
@@ -561,7 +561,7 @@ All workflows:
 This is a point-in-time local validation from an earlier commit, kept as a worked example of
 what a full local run looks like - it is not regenerated on every change and does not describe
 the current `main`. For the current state, check the Quality Gates badge above or the
-[Actions tab](https://github.com/adolfohanviu/python-qa-platform-framework/actions).
+[Actions tab](https://github.com/adolfohanviu/python-qa-platform/actions).
 
 - `pytest -m "api or bdd" -v` -> `8 passed, 2 deselected`
 - `OBSERVABILITY_ENABLED=true OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 pytest -m "api or bdd" -v` -> `8 passed, 2 deselected`
