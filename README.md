@@ -26,7 +26,7 @@ Comprehensive QA platform engineering project built with Python, Pytest, and Pla
 
 - **Core Framework Architecture** - three-layer Python/Pytest design (utilities, fixtures, tests)
 - **Automation & Validation** - fast REST API suites and BDD with Cucumber/Gherkin + `pytest-bdd`
-- **AI-Assisted QA Workflows** - state-machine coverage generation, API exploration, CI failure pattern analysis, secure prompting practices
+- **AI-Assisted QA Workflows** - Claude Code skills for failure triage and BDD scaffolding, an LLM-backed CI failure-triage step, and a versioned, injection-aware prompt template - see [AI-Assisted QA Engineering](#ai-assisted-qa-engineering) below
 - **Quality Gates** - flake8 + PEP 8 checks in Buildbot, Pylint feedback in VS Code
 - **Performance Engineering** - JMeter test execution with Grafana trend analysis
 - **Platform Validation** - Docker and Kubernetes deployment checks automated as part of QA flows
@@ -48,15 +48,26 @@ tests/
 │   └── config.py          # Configuration management
 ├── features/              # Gherkin feature files (future)
 ├── screenshots/           # Failure screenshots
+├── unit/                  # Unit tests for AI triage logic (no browser/network)
+│   └── test_ai_failure_triage.py
 ├── conftest.py            # Pytest fixtures and hooks
 └── test_*.py              # Test files
 
+AGENTS.md                  # Canonical agent instructions (setup, conventions, AI workflows)
+CLAUDE.md                  # Claude Code-specific pointers on top of AGENTS.md
+.claude/skills/             # Project-local Claude Code skills
+├── flaky-test-triage/     # Investigate a failing/flaky test
+└── bdd-scenario-scaffold/ # Scaffold a new BDD scenario
+
+prompts/                    # Versioned LLM prompt templates
+└── failure_triage.md      # Shared by the skill and the CI triage script
+
 .github/workflows/         # GitHub Actions CI/CD
-├── all-tests.yml         # All tests workflow
+├── all-tests.yml         # All tests workflow (+ AI failure triage on failure)
 ├── smoke-tests.yml       # Smoke tests (daily schedule)
 ├── regression-tests.yml  # Regression tests (daily schedule)
 ├── docker-build.yml      # Docker build and test
-├── quality-gates.yml     # flake8 + pylint + API gate
+├── quality-gates.yml     # flake8 + pylint + API gate + AI triage unit tests
 └── performance-tests.yml # JMeter performance workflow
 
 performance/               # Performance test assets
@@ -68,6 +79,7 @@ mocks/                    # WireMock mappings and responses
 └── __files/              # Mock response bodies
 
 scripts/                   # Helper scripts
+├── ai_failure_triage.py # LLM-backed CI failure triage (see AI-Assisted QA Engineering)
 ├── run.sh               # Bash wrapper (macOS/Linux)
 ├── run.ps1              # PowerShell wrapper (Windows)
 ├── run-performance.sh   # JMeter performance runner (macOS/Linux)
@@ -389,6 +401,14 @@ Requirements for these scripts: local `jmeter` installed or Docker daemon runnin
 
 ## Observability (LGTM)
 
+The observability stack (`docker-compose.observability.yml`) and the containerized test
+runner (`docker-compose.yml`) are two independent Docker networks - this workflow runs
+`pytest` directly on the host against the containerized LGTM stack's published ports
+(`localhost:4318` etc.), it does not run the test-runner container and the LGTM stack
+together. Running `docker-compose up` (test-runner) at the same time as the observability
+stack will not produce traces, since the test-runner container can't reach `tempo` by
+`localhost`.
+
 Start observability stack:
 
 ```powershell
@@ -434,15 +454,46 @@ Outputs are generated under `performance/results/`:
 - `results.jtl` (raw execution metrics)
 - `html-report/` (visual summary report)
 
+## AI-Assisted QA Engineering
+
+This project treats AI usage as reviewable engineering, not a marketing bullet - every claim below points at a real file.
+
+| What | Where | Kind |
+|---|---|---|
+| Root-cause triage for a failing/flaky test | `.claude/skills/flaky-test-triage/SKILL.md` | Claude Code skill (local, interactive) |
+| BDD scenario scaffolding | `.claude/skills/bdd-scenario-scaffold/SKILL.md` | Claude Code skill (local, interactive) |
+| CI failure triage | `scripts/ai_failure_triage.py` | Runs in CI (`all-tests.yml`), calls the Claude API |
+| Shared, versioned prompt | `prompts/failure_triage.md` | Single source of truth for both the skill and the CI script |
+| Repo-wide agent instructions | `AGENTS.md` / `CLAUDE.md` | Setup, conventions, and this table, kept current |
+
+### How the CI triage step works
+
+On a failed `pytest` run in `all-tests.yml`, a step gated on `if: failure()` runs `scripts/ai_failure_triage.py`, which:
+
+1. Parses the JUnit XML report for failed/errored tests (capped at `TRIAGE_MAX_FAILURES`, default 5, to bound cost).
+2. Correlates each failure with matching JSON events from `logs/qa-tests.log` when observability was enabled for the run.
+3. Sends each failure to Claude (`claude-opus-5` by default, override with `TRIAGE_MODEL`) using the prompt in `prompts/failure_triage.md`, and validates the JSON response against a Pydantic schema, retrying once on malformed output.
+4. Writes the result to the GitHub Actions step summary, `triage-report.md`, and (on failure) an uploaded `ai-triage-report` artifact.
+
+It never fails the build - triage is diagnostic, not a gate - and skips cleanly, without erroring, when `ANTHROPIC_API_KEY` isn't available (the normal case for a pull request from a fork, since GitHub doesn't expose repo secrets there).
+
+### Prompt-injection awareness
+
+Test failures can contain attacker-controlled content - a scraped page, an API response body. `prompts/failure_triage.md` fences all captured evidence inside `<test_failure>`/`<observability_events>` tags with an explicit instruction never to treat their contents as commands. `tests/unit/test_ai_failure_triage.py` covers the parsing and prompt-building logic (no network calls) so this code is held to the same bar as the rest of the framework.
+
+### Enabling it
+
+Add an `ANTHROPIC_API_KEY` secret to the repository (Settings -> Secrets and variables -> Actions) to turn the CI step on. Locally, the two skills above need no key - they run inside your own Claude Code session.
+
 ## CI/CD Integration
 
 ### GitHub Actions Workflows
 
 Six automated workflows are configured:
 
-**1. All Tests** - Runs on push/PR to main
+**1. All Tests** - Runs on push/PR to main, triages failures with Claude when they occur
 ```bash
-pytest -v
+pytest -v --junitxml=test-results.xml
 ```
 
 **2. Smoke Tests** - Scheduled daily at 6 AM + manual trigger
@@ -462,9 +513,10 @@ docker build && docker run pytest -v
 
 **5. Quality Gates** - Runs on push/PR to main + manual trigger
 ```bash
-flake8 tests
-pylint tests/api tests/utils tests/steps --disable=R,C --fail-under=8.5
+flake8 tests scripts
+pylint tests/api tests/utils tests/steps scripts --disable=R,C --fail-under=8.5
 pytest -m "api" -v
+pytest -m "unit" -v
 ```
 
 **6. Performance Tests** - Weekly schedule + manual trigger
@@ -479,9 +531,12 @@ All workflows:
 - Generate Allure reports
 - Upload artifacts with 30-day retention
 
-## Verification Evidence (Mar 6, 2026)
+## Verification Evidence (historical snapshot, 2026-03-06)
 
-Local validation executed for the portfolio implementation:
+This is a point-in-time local validation from an earlier commit, kept as a worked example of
+what a full local run looks like - it is not regenerated on every change and does not describe
+the current `main`. For the current state, check the Quality Gates badge above or the
+[Actions tab](https://github.com/adolfohanviu/python-qa-platform-framework/actions).
 
 - `pytest -m "api or bdd" -v` -> `8 passed, 2 deselected`
 - `OBSERVABILITY_ENABLED=true OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318 pytest -m "api or bdd" -v` -> `8 passed, 2 deselected`
