@@ -1,6 +1,5 @@
 import os
 import logging
-import asyncio
 from pathlib import Path
 from typing import AsyncGenerator
 
@@ -22,24 +21,6 @@ from tests.utils.observability import (
 )
 
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an event loop for the test session.
-
-    pytest-asyncio 0.23 deprecates overriding this fixture in favor of
-    `loop_scope`/`event_loop_policy`, but tests/steps/test_login_bdd.py calls
-    `event_loop.run_until_complete(...)` directly to bridge pytest-bdd's sync
-    step functions into the same loop the async `browser`/`context`/`page`
-    fixtures run on. Migrating away needs a real test run to confirm the BDD
-    suite still shares one loop with Playwright - do that with a Python 3.11
-    environment (this repo's target) before touching this fixture.
-    """
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    yield loop
-    loop.close()
 
 
 @pytest.fixture(scope="session")
