@@ -129,16 +129,16 @@ class APIClient:
     
     def get_json(self) -> Dict:
         """Get JSON response from last request"""
-        if not self.last_response:
+        if self.last_response is None:
             raise ValueError("No previous response")
         try:
             return self.last_response.json()
         except ValueError as exc:
             logger.error("Failed to decode JSON response: %s", str(exc))
             raise
-    
+
     def get_status_code(self) -> int:
         """Get status code from last response"""
-        if not self.last_response:
+        if self.last_response is None:
             raise ValueError("No previous response")
         return self.last_response.status_code
