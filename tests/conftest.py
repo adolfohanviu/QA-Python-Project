@@ -23,6 +23,22 @@ from tests.utils.observability import (
 logger = logging.getLogger(__name__)
 
 
+@pytest.fixture
+def sync_bridge(_function_scoped_runner):
+    """Run a coroutine on the same loop pytest-asyncio uses for this test.
+
+    pytest-asyncio 1.x removed the public `event_loop` fixture that
+    tests/steps/test_login_bdd.py used to bridge pytest-bdd's sync step
+    functions into the loop driving the async `browser`/`context`/`page`
+    fixtures. `_function_scoped_runner` is the `asyncio.Runner` pytest-asyncio
+    already creates to run those fixtures' setup/teardown on - reusing it
+    (instead of spinning up a second loop) keeps every Playwright call on the
+    one loop its objects are bound to. It's a private pytest-asyncio fixture
+    name, so it may need revisiting on a future pytest-asyncio major bump.
+    """
+    return _function_scoped_runner.run
+
+
 @pytest.fixture(scope="session")
 def headless() -> bool:
     """Get headless mode from env or default to True

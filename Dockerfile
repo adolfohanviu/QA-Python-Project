@@ -1,18 +1,21 @@
 # Single-stage build for test automation framework
 # Use the official Playwright image to include all browser deps
-FROM mcr.microsoft.com/playwright/python:v1.40.0-jammy AS base
+FROM mcr.microsoft.com/playwright/python:v1.62.0-jammy AS base
 
 # Set working directory
 WORKDIR /app
 
 # Playwright image already includes all browser dependencies
 
-# Copy requirements first for better caching
-COPY requirements.txt .
+# Copy the fully-pinned lockfile first for better caching. requirements.txt
+# stays the human-edited source of truth; requirements-lock.txt (direct +
+# transitive deps, pinned via `pip freeze`) is what actually gets installed,
+# so a yanked/broken transitive release can't silently break a fresh build.
+COPY requirements-lock.txt .
 
 # Install Python dependencies and ensure browser deps are present
 USER root
-RUN pip install --no-cache-dir -r requirements.txt && \
+RUN pip install --no-cache-dir -r requirements-lock.txt && \
     playwright install-deps && \
     playwright install
 
