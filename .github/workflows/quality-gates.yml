@@ -23,13 +23,16 @@ jobs:
       run: pip install -r requirements.txt
 
     - name: flake8 quality gate
-      run: flake8 tests
+      run: flake8 tests scripts
 
     - name: pylint quality gate
-      run: pylint tests/api tests/utils tests/steps --disable=R,C --fail-under=8.5
+      run: pylint tests/api tests/utils tests/steps scripts --disable=R,C --fail-under=8.5
 
     - name: API regression gate
       run: pytest -m "api" -v
       env:
         API_BASE_URL: https://jsonplaceholder.typicode.com
         HEADLESS: true
+
+    - name: AI failure triage unit tests
+      run: pytest -m "unit" -v

@@ -25,12 +25,19 @@ jobs:
       run: playwright install
     
     - name: Run all tests
-      run: pytest -v
+      run: pytest -v --junitxml=test-results.xml
       env:
         BASE_URL: https://www.saucedemo.com
         API_BASE_URL: https://jsonplaceholder.typicode.com
         HEADLESS: true
-    
+
+    - name: AI failure triage
+      if: failure()
+      continue-on-error: true
+      run: python scripts/ai_failure_triage.py
+      env:
+        ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
     - name: Generate Allure Report
       if: always()
       continue-on-error: true
@@ -48,4 +55,13 @@ jobs:
       with:
         name: allure-results
         path: allure-results
+        retention-days: 30
+
+    - name: Upload AI triage report
+      if: failure()
+      continue-on-error: true
+      uses: actions/upload-artifact@v4
+      with:
+        name: ai-triage-report
+        path: triage-report.md
         retention-days: 30
