@@ -13,8 +13,8 @@ COPY requirements.txt .
 # Install Python dependencies and ensure browser deps are present
 USER root
 RUN pip install --no-cache-dir -r requirements.txt && \
-    playwright install-deps chromium && \
-    playwright install chromium
+    playwright install-deps && \
+    playwright install
 
 # Copy application code
 COPY . .
@@ -26,9 +26,10 @@ RUN mkdir -p allure-results tests/screenshots && \
     chmod -R 777 /app/allure-results
 USER pwuser
 
-# Health check
+# Health check - fails if the Python/Playwright environment is broken
+# (unlike a bare `sys.exit(0)`, which always reports healthy).
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import sys; sys.exit(0)" || exit 1
+    CMD python -c "import playwright, pytest" || exit 1
 
 # Default command runs tests
 CMD ["pytest", "-v", "--alluredir=allure-results"]

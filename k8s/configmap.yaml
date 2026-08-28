@@ -3,10 +3,9 @@ kind: ConfigMap
 metadata:
   name: qa-test-config
   namespace: qa-automation
-spec:
-  .env: |
-    HEADLESS=true
-    BASE_URL=https://www.saucedemo.com
-    API_BASE_URL=https://jsonplaceholder.typicode.com
-    LOG_LEVEL=INFO
-    PYTHONUNBUFFERED=1
+data:
+  HEADLESS: "true"
+  BASE_URL: "https://www.saucedemo.com"
+  API_BASE_URL: "https://jsonplaceholder.typicode.com"
+  LOG_LEVEL: "INFO"
+  PYTHONUNBUFFERED: "1"

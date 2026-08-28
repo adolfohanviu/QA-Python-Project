@@ -1,7 +1,12 @@
+# This directory is a plain manifest set (no Chart.yaml/templates), so this
+# Job is meant to be launched with `kubectl create -f k8s/job.yaml` for each
+# run - generateName lets the API server assign a unique name per creation.
+# `kubectl apply` doesn't fit a generateName resource (there's no fixed name
+# to diff against); use apply for the other manifests in this directory.
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: qa-test-runner-{{ .Release.Name }}-{{ now | date "20060102150405" }}
+  generateName: qa-test-runner-
   namespace: qa-automation
   labels:
     app: qa-test-runner
@@ -46,10 +51,15 @@ spec:
             configMapKeyRef:
               name: qa-test-config
               key: LOG_LEVEL
+        - name: PYTHONUNBUFFERED
+          valueFrom:
+            configMapKeyRef:
+              name: qa-test-config
+              key: PYTHONUNBUFFERED
         
         resources:
           requests:
-            memory: "256Mi"
+            memory: "512Mi"
             cpu: "500m"
           limits:
             memory: "1Gi"
