@@ -45,3 +45,6 @@ Thumbs.db
 *.egg-info/
 dist/
 build/
+
+# Local AI-tooling caches (machine-specific, not portable across clones)
+.atl/
