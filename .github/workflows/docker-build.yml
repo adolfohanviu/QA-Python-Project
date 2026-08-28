@@ -27,7 +27,6 @@ jobs:
         cache-to: type=gha,mode=max
     
     - name: Run tests in Docker
-      continue-on-error: true
       run: |
         mkdir -p allure-results
         docker run --rm \
@@ -36,15 +35,7 @@ jobs:
           -e API_BASE_URL=https://jsonplaceholder.typicode.com \
           -v ${{ github.workspace }}/allure-results:/app/allure-results \
           qa-python-tests:${{ github.sha }} \
-          bash -c "pytest tests -v --alluredir=allure-results || true"
-        
-        echo "Docker test execution completed"
-        if [ -d allure-results ] && [ -n "$(ls -A allure-results)" ]; then
-          echo "✓ Allure results found"
-          ls -la allure-results
-        else
-          echo "⚠ No allure results generated - tests may have failed"
-        fi
+          pytest tests -v --alluredir=allure-results
     
     - name: Generate Allure Report
       if: always()
